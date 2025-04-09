@@ -1,24 +1,23 @@
 node{
-    
-echo "The Build number is: ${env.BUILD_NUMBER}"
-echo "The Job name is: ${env.JOB_NAME}"
-echo "The Node is name is: ${env.NODE_NAME}"
-echo "The workspace is: ${env.WORKSPACE}"
-echo "The Jenkins Home directory is: ${env.JENKINS_HOME}"
-echo "The Jenkins url is: ${env.JENKINS_URL}"
-
-
+    echo "the build id is:${BUILD_ID}"
+    echo "the build number is : ${BUILD_NUMBER}"
+echo " the workspace is :${WORKSPACE}"
+echo "the jenkins home is :${JENKINS_HOME}"
+echo " the jenkins url is :${JENKINS_URL}"
+echo " the job name is :${JOB_NAME}"
 def mavenHome = tool name: 'maven3.9.9'
 properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), pipelineTriggers([pollSCM('* * * * *')])])
+
 try{
 stage('CheckOutCode'){
-sendSlackNotifications('STARTED')
-git branch: 'development', credentialsId: '9e2aca48-edfd-4dd9-acc9-b352ab51a722', url: 'https://github.com/Tejasree123235/maven-web-application.git'
+sendslacknotification('STARTED')
+git branch: 'development', credentialsId: 'd6becbe3-5aa7-4a66-9915-ffe714eac8e5', url: 'https://github.com/Tejasree123235/maven-web-application.git'
 }
 
 stage('Build'){
 sh "${mavenHome}/bin/mvn clean package"
 }
+
 stage('ExecuteSonarQubeReport'){
 sh "${mavenHome}/bin/mvn clean sonar:sonar"
 }
@@ -26,26 +25,24 @@ sh "${mavenHome}/bin/mvn clean sonar:sonar"
 stage('UploadArtifactsIntoNexus'){
 sh "${mavenHome}/bin/mvn clean deploy"
 }
+stage('uploadthefileintomcat'){
+    sshagent(['c1846823-c69d-42af-8882-875e2bde77da']) {
+       sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.0.88:/opt/apache-tomcat-9.0.102/webapps"
+}
+}
 
-stage('DeployAppIntoTomcatServer'){
-sshagent(['bfb6d86a-3ded-460b-8b79-f23379a48bb9']) {
-sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.0.88:/opt/apache-tomcat-9.0.102/webapps/"  
-}
-}
 }
 catch(e){
- currentBuild.result = "FAILED"
- throw e
+    currentBuild.result="FAILURE"
+throw e
 }
 finally{
- sendSlackNotifications(currentBuild.result)
+    sendslacknotification(currentBuild.result)
 }
-
-}//node closing
-
-def sendSlackNotifications(String buildStatus = 'STARTED') {
+}
+def sendslacknotification(String buildStatus = 'STARTED') {
   // build status of null means successful
-  buildStatus =  buildStatus ?: 'SUCCESS'
+  buildStatus =  buildStatus ?: 'SUCCESSFUL'
 
   // Default values
   def colorName = 'RED'
@@ -55,16 +52,16 @@ def sendSlackNotifications(String buildStatus = 'STARTED') {
 
   // Override default values based on build status
   if (buildStatus == 'STARTED') {
-    colorName = 'YELLOW'
+    color = 'YELLOW'
     colorCode = '#FFFF00'
-  } else if (buildStatus == 'SUCCESS') {
-    colorName = 'GREEN'
+  } else if (buildStatus == 'SUCCESSFUL') {
+    color = 'GREEN'
     colorCode = '#00FF00'
   } else {
-    colorName = 'RED'
+    color = 'RED'
     colorCode = '#FF0000'
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary, channel: '#icicibankteam')
+  slackSend (color: colorCode, message: summary)
 }
