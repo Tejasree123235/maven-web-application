@@ -9,7 +9,7 @@ echo "The Jenkins url is: ${env.JENKINS_URL}"
 
 
 def mavenHome = tool name: 'maven3.9.9'
-
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), pipelineTriggers([pollSCM('* * * * *')])])
 try{
 stage('CheckOutCode'){
 sendSlackNotifications('STARTED')
@@ -20,7 +20,6 @@ stage('Build'){
 sh "${mavenHome}/bin/mvn clean package"
 }
 
-  /*
 stage('ExecuteSonarQubeReport'){
 sh "${mavenHome}/bin/mvn clean sonar:sonar"
 }
@@ -34,7 +33,6 @@ sshagent(['bfb6d86a-3ded-460b-8b79-f23379a48bb9']) {
 sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.4.134:/opt/apache-tomcat-9.0.102/webapps/"  
 }
 }
-*/
 }
 catch(e){
  currentBuild.result = "FAILED"
