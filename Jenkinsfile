@@ -19,7 +19,6 @@ git branch: 'development', credentialsId: '9e2aca48-edfd-4dd9-acc9-b352ab51a722'
 stage('Build'){
 sh "${mavenHome}/bin/mvn clean package"
 }
-/*
 stage('ExecuteSonarQubeReport'){
 sh "${mavenHome}/bin/mvn clean sonar:sonar"
 }
@@ -33,7 +32,6 @@ sshagent(['bfb6d86a-3ded-460b-8b79-f23379a48bb9']) {
 sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.4.134:/opt/apache-tomcat-9.0.102/webapps/"  
 }
 }
-*/
 }
 catch(e){
  currentBuild.result = "FAILED"
