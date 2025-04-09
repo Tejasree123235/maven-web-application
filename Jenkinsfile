@@ -13,7 +13,7 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKe
 try{
 stage('CheckOutCode'){
 sendSlackNotifications('STARTED')
-git branch: 'development', credentialsId: '9e2aca48-edfd-4dd9-acc9-b352ab51a722', url: 'https://github.com/MithunTechnologiesDevOps/maven-web-application.git'
+git branch: 'development', credentialsId: '9e2aca48-edfd-4dd9-acc9-b352ab51a722', url: ''
 }
 
 stage('Build'){
